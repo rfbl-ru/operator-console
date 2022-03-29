@@ -11,8 +11,16 @@
 # Дата: 10.10.2021
 # #
 
+# /
+# TODO
+#  Ping Bluetooth robot
+#
+#
+# #
 
 from functions import *
+import os
+# os.add_dll_directory(os.getcwd())
 
 robotsArray = {}
 robotsImageArray = {}
@@ -26,12 +34,12 @@ app.getRoot().resizable(False, False)
 
 if __name__ == '__main__':
     createMQTTConnection()
+    getCameraList()
 
     # CREATE WINDOW
     pitchFrame = app.createFrame(0, 0, width, height / 2)
     camera1Frame = app.createFrame(0, height / 2, width / 2, height / 2, rwidth=0.5)
     camera2Frame = app.createFrame(width / 2, height / 2, width / 2, height / 2, rwidth=0.5)
-    print(camera1Frame, camera2Frame)
 
     sc1 = app.createButton(camera1Frame, lambda: stopCameraStream(camera1Frame, cc1, sc1), text=language['stopCamera'])
     cc1 = app.createButton(camera1Frame, lambda: chooseCamera(app.getFrame(camera1Frame), cc1, sc1, camera1Frame),
@@ -53,10 +61,11 @@ if __name__ == '__main__':
 
     app.placeCanvas(pitchCanvas, 2, 0.5, 0.5, CENTER)
 
-    pitchImage = ImageTk.PhotoImage(Image.open("images/pitch.png"), Image.ANTIALIAS)
+    pitchImage = ImageTk.PhotoImage(Image.open("images/pitch.png").rotate(90), Image.ANTIALIAS)
 
     pitchCanvas.background = pitchImage
     bg = pitchCanvas.create_image(pitchSize[0] / 2, pitchSize[1] / 2, image=pitchImage, anchor=CENTER)
+    markerCalculator.setMainRobotId(settings['robot_name'])
 
     markerCalculator.setCanvas(pitchCanvas)  # Create marker drawer on canvas pitchCanvas
 

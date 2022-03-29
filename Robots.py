@@ -11,6 +11,7 @@ pitchMarkersArray = {}
 pitchTextArray = {}
 pitchMarkerLeftCorner = {}
 robotImage = Image.open("images/robotIcon.png")
+robotMainImage = Image.open("images/robotIconMain.png")
 
 
 def centroid(vertexes):
@@ -32,6 +33,7 @@ class Robots:
     def __init__(self):
         self.oldMarkerIdList = []
         self.pitchCornerIdList = pitchCornerIdList
+        self.mainRobotId = -1
         self.pitchSize = pitchSize
         self.cameraResolution = cameraResolution
         self.oldMarkerIdList = []
@@ -40,6 +42,9 @@ class Robots:
     def setCanvas(self, canvas):
         self.canvas = canvas
         self.ball = self.canvas.create_oval(0, 0, 10, 10, fill='red')
+
+    def setMainRobotId(self, id_):
+        self.mainRobotId = id_
 
     def showAll(self, topic, data, param_1='ball', param_2='aruco'):
         if topic.__contains__(param_1):
@@ -89,6 +94,7 @@ class Robots:
                         (
                                 localCoordinateX1 < 0 and localCoordinateY1 > 0 and localCoordinateX2 < 0 and localCoordinateY2 < 0 and 0 < angle < 90):
                     angle = angle - 180
+                angle -= 90
                 if marker['marker-id'] not in self.pitchCornerIdList:
                     markerData = [marker['marker-id'], angle, [coordsX, coordsY]]
 
@@ -109,15 +115,19 @@ class Robots:
                         pitchMarkersArray[marker[0] - 1] = self.canvas.create_rectangle((0, 0, 0, 0))
                         pitchTextArray[marker[0] - 1] = self.canvas.create_text(0, 0, text=marker[0])
                 else:
+                    robotImage_ = robotImage
+                    if marker[0] == int(self.mainRobotId):
+                        robotImage_ = robotMainImage
+
                     try:
-                        robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage.rotate(-marker[1]))
+                        robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
                         robotsArray[marker[0] - 1] = self.canvas.create_image(marker[2][0], marker[2][1],
                                                                               image=robotsImageArray[marker[0] - 1])
                         self.canvas.coords(robotsTextArray[marker[0] - 1], marker[2][0], marker[2][1])
                     except KeyError:
                         robotsArray[marker[0] - 1] = self.canvas.create_image(marker[2][0], marker[2][1],
                                                                               image=robotsImageArray[marker[0] - 1])
-                        robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage.rotate(-marker[1]))
+                        robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
                         robotsTextArray[marker[0] - 1] = self.canvas.create_text(marker[2][0], marker[2][1],
                                                                                  text=marker[0])
 

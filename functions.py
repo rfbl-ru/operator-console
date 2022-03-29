@@ -34,7 +34,7 @@ def openSettingsWindow():
         settingsRoot.attributes("-topmost", True)
 
         settingsRoot.protocol("WM_DELETE_WINDOW", lambda: on_settingsClose(settingsRoot))
-        settingsRoot.resizable(False, False)
+        settingsRoot.resizable(False, True)
 
         settingsData = readSettingsData()
         if len(settingsData) > 0:
@@ -128,11 +128,13 @@ def readSettingsData():
 
 def on_settingsClose(root):
     global settings_popup, entries
+
     settings_popup = False
     root.destroy()
     data = {}
     for entry in entries:
         data[entry] = entries[entry].get()
+    markerCalculator.setMainRobotId(data['robot_name'])
     saveSettingsData(data)
 
 
@@ -167,6 +169,7 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with code %d." % (rc))
     client.subscribe(topic=topicBall, qos=1)
     client.subscribe(topic=topicRoot, qos=1)
+    client.subscribe(topic=topicInternalData, qos=1)
 
 
 def createMQTTConnection():
@@ -181,6 +184,10 @@ def createMQTTConnection():
         sendThread.start()
     except:
         pass
+
+
+def getCameraList():
+    client.publish(topicInternalCommands, "getList")
 
 
 def send():
