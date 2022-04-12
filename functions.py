@@ -1,10 +1,13 @@
-from tkinter.messagebox import askyesno
+from tkinter.messagebox import askyesno, showinfo
 
 import paho.mqtt.client as paho
 from Robots import *
 from player_functions import *
 import time
 import threading
+import vars
+
+
 
 markerCalculator = Robots()
 client = paho.Client()
@@ -16,6 +19,8 @@ settings_popup = False
 entries = {}
 bindCommand = None
 bindKeyboard = None
+
+isBinding = False
 
 sendThread = None
 
@@ -32,9 +37,9 @@ def openSettingsWindow():
         settings_popup = True
         settingsRoot = settingsWindow.getRoot()
         settingsRoot.attributes("-topmost", True)
-
+        settingsRoot.bind("<KeyPress>", key_pressed)
         settingsRoot.protocol("WM_DELETE_WINDOW", lambda: on_settingsClose(settingsRoot))
-        settingsRoot.resizable(False, True)
+        settingsRoot.resizable(True, False)
 
         settingsData = readSettingsData()
         if len(settingsData) > 0:
@@ -95,14 +100,8 @@ def clearBinds():
 
 
 def bindKey():
-    global bindCommand, bindKeyboard, keyboard
-    print("Binding key button")
-    settings = readKeyboardSettings()
-    settings[bindKeyboard.get()] = bindCommand.get()
-    print(settings)
-    saveKeyboardSettings(settings)
-    with open('data/keyboard.json', 'r+', encoding='utf-8') as f:
-        keyboard = json.load(f)
+    global isBinding
+    isBinding = True
 
 
 def readKeyboardSettings():
@@ -127,21 +126,20 @@ def readSettingsData():
 
 
 def on_settingsClose(root):
-    global settings_popup, entries
-
+    global settings_popup, entries, settings
     settings_popup = False
     root.destroy()
     data = {}
     for entry in entries:
         data[entry] = entries[entry].get()
     markerCalculator.setMainRobotId(data['robot_name'])
+    settings = data
     saveSettingsData(data)
 
 
 def reloadMQTTConnection():
     print("reloading connections")
-    with open('data/settings.json', 'r+', encoding='utf-8') as f:
-        settings = json.load(f)
+    settings = readSettingsData()
     global sendThread
     try:
         client.disconnect()
@@ -161,33 +159,59 @@ def on_message(client, userdata, msg):
     global markerCalculator
     data = json.loads(msg.payload.decode('utf-8'))
     topic = str(msg.topic)
-    markerCalculator.showAll(topic, data, param_1=topicBall[:len(topicBall) - 1],
-                             param_2=topicRoot[:len(topicRoot) - 1])
+    if topic == topicInternalData.format(settings['robot_name']):
+
+        with open("data/camsConfig.json", 'w+', encoding='utf-8') as f:
+            json.dump(data['cameras'], f)
+
+        with open("data/gameConfiguration.json", 'w+', encoding='utf-8') as f:
+            json.dump(data['commands'], f)
+
+        teammates_ = []
+        for player in data['commands'][settings['cmd_name']]:
+            teammates_.append(player['playerId'])
+
+        print(teammates_)
+        markerCalculator.setTeams(teammates_)
+    elif "status" in topic:
+        try:
+            vars.statusVariable.set(language["status"] + ":" + data['status'])
+        except AttributeError:
+            print("Attrib")
+            pass
+        print(data)
+    else:
+        markerCalculator.showAll(topic, data, param_1=topicBall[:len(topicBall) - 1],
+                                 param_2=topicRoot[:len(topicRoot) - 1])
 
 
 def on_connect(client, userdata, flags, rc):
-    print("Connected with code %d." % (rc))
+    print("Connected with code %d." % rc)
     client.subscribe(topic=topicBall, qos=1)
     client.subscribe(topic=topicRoot, qos=1)
-    client.subscribe(topic=topicInternalData, qos=1)
+    client.subscribe(topic=topicInternalData.format(settings['robot_name']), qos=1)
+    client.subscribe(topic=topicRobot + settings["robot_name"] + "/status", qos=1)
+    getConfigFile()
 
 
 def createMQTTConnection():
     global sendThread
     # MQTT CONNECTION
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.username_pw_set(settings['mqtt_login'], settings['mqtt_pwd'])
-    try:
-        client.connect(host=settings['mqtt_host'])
-        sendThread = threading.Thread(target=send, args=(), daemon=True)
-        sendThread.start()
-    except:
-        pass
+    if settings['mqtt_host'] != "":
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.username_pw_set(settings['mqtt_login'], settings['mqtt_pwd'])
+        try:
+            client.connect(host=settings['mqtt_host'])
+            sendThread = threading.Thread(target=send, args=(), daemon=True)
+            sendThread.start()
+        except:
+            pass
 
 
-def getCameraList():
-    client.publish(topicInternalCommands, "getList")
+def getConfigFile():
+    command = {"command": "getConfig"}
+    client.publish(topicInternalCommands.format(settings['robot_name']), json.dumps(command))
 
 
 def send():
@@ -197,22 +221,35 @@ def send():
         time.sleep(0.08)
         if len(sendingKey) > 0:
             for key in sendingKey:
-                client.publish(sendTopic, keyboard[key])
+                client.publish(sendTopic, keyboard[str(key)])
 
 
 def key_pressed(event):
-    global sendingKey
-    try:
-        if not (event.char in sendingKey) and event.char in keyboard:
-            sendingKey.append(event.char)
-    except KeyError:
-        pass
+    global sendingKey, keyboard, isBinding
+    print(event)
+
+    if isBinding:
+        settings = readKeyboardSettings()
+        settings[event.keycode] = bindCommand.get()[:-1]
+        print(settings)
+        saveKeyboardSettings(settings)
+        with open('data/keyboard.json', 'r+', encoding='utf-8') as f:
+            keyboard = json.load(f)
+        isBinding = False
+        showinfo(language['bind_title'], language['bind_message'].format(event.char, bindCommand.get()[:-1]))
+    else:
+        try:
+            if not (event.keycode in sendingKey) and str(event.keycode) in keyboard:
+                sendingKey.append(event.keycode)
+
+        except KeyError:
+            pass
 
 
 def key_released(event):
     global sendingKey
     try:
-        if event.char in sendingKey:
-            sendingKey.remove(event.char)
+        if event.keycode in sendingKey:
+            sendingKey.remove(event.keycode)
     except KeyError:
         pass

@@ -1,4 +1,5 @@
 from tkinter import *
+import vars
 
 
 class Window:
@@ -9,29 +10,23 @@ class Window:
         else:
             self.window = Tk()
         self.window.title(title)
+
         # self.window.geometry(str(width) + "x" + str(height))
         self.window.geometry("{}x{}".format(width, height))
         self.frameArray = []
 
-
-
-
     def setBinds(self, keyRelease, keyPress):
         self.gui.bind('<KeyRelease>', keyRelease)
         self.gui.bind('<KeyPress>', keyPress)
+
     def getRoot(self):
         return self.window
 
     # #
-    # ███████╗██████╗░░█████╗░███╗░░░███╗███████╗
-    # ██╔════╝██╔══██╗██╔══██╗████╗░████║██╔════╝
-    # █████╗░░██████╔╝███████║██╔████╔██║█████╗░░
-    # ██╔══╝░░██╔══██╗██╔══██║██║╚██╔╝██║██╔══╝░░
-    # ██║░░░░░██║░░██║██║░░██║██║░╚═╝░██║███████╗
-    # ╚═╝░░░░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚══════╝
+    # Frame
     # #
 
-    def createFrame(self, row, column, width, height, rwidth=1, bg='#fff'):
+    def createFrame(self, row, column, width, height, rwidth=1, bg='#FFFFFF'):
         frame = Frame(self.window, bg=bg, width=width, height=height)
         self.frameArray.append(frame)
         frameIndex = self.frameArray.index(frame)
@@ -46,15 +41,11 @@ class Window:
         return self.frameArray[frameNum]
 
     # #
-    # ██████╗░██╗░░░██╗████████╗████████╗░█████╗░███╗░░██╗
-    # ██╔══██╗██║░░░██║╚══██╔══╝╚══██╔══╝██╔══██╗████╗░██║
-    # ██████╦╝██║░░░██║░░░██║░░░░░░██║░░░██║░░██║██╔██╗██║
-    # ██╔══██╗██║░░░██║░░░██║░░░░░░██║░░░██║░░██║██║╚████║
-    # ██████╦╝╚██████╔╝░░░██║░░░░░░██║░░░╚█████╔╝██║░╚███║
-    # ╚═════╝░░╚═════╝░░░░╚═╝░░░░░░╚═╝░░░░╚════╝░╚═╝░░╚══╝
+    # Button
     # #
 
-    def createButton(self, frameNum, command, text=None, image=None, background="#555", foreground="#ccc", padx="20", pady="8",
+    def createButton(self, frameNum, command, text=None, image=None, background="#555", foreground="#ccc", padx="20",
+                     pady="8",
                      font="16"):
         if image is None:
             return Button(self.frameArray[frameNum], text=text, command=command)
@@ -70,12 +61,7 @@ class Window:
             button.place(relx=x, rely=y, anchor=anchor)
 
     # #
-    # ██╗░░░░░░█████╗░██████╗░███████╗██╗░░░░░
-    # ██║░░░░░██╔══██╗██╔══██╗██╔════╝██║░░░░░
-    # ██║░░░░░███████║██████╦╝█████╗░░██║░░░░░
-    # ██║░░░░░██╔══██║██╔══██╗██╔══╝░░██║░░░░░
-    # ███████╗██║░░██║██████╦╝███████╗███████╗
-    # ╚══════╝╚═╝░░╚═╝╚═════╝░╚══════╝╚══════╝
+    # Label
     # #
 
     def createLabel(self, frameNum, text=None, image=None, background="#fff", foreground="#fff", padx="20", pady="8",
@@ -92,12 +78,7 @@ class Window:
             label.place(x=x, y=y)
 
     # #
-    # ░█████╗░░█████╗░███╗░░██╗██╗░░░██╗░█████╗░░██████╗
-    # ██╔══██╗██╔══██╗████╗░██║██║░░░██║██╔══██╗██╔════╝
-    # ██║░░╚═╝███████║██╔██╗██║╚██╗░██╔╝███████║╚█████╗░
-    # ██║░░██╗██╔══██║██║╚████║░╚████╔╝░██╔══██║░╚═══██╗
-    # ╚█████╔╝██║░░██║██║░╚███║░░╚██╔╝░░██║░░██║██████╔╝
-    # ░╚════╝░╚═╝░░╚═╝╚═╝░░╚══╝░░░╚═╝░░░╚═╝░░╚═╝╚═════╝░
+    # CANVAS
     # #
 
     def createCanvas(self, frameNum):
@@ -113,12 +94,7 @@ class Window:
             canvas.place(relx=x, rely=y, anchor=anchor)
 
     # #
-    # ███╗░░░███╗███████╗███╗░░██╗██╗░░░██╗
-    # ████╗░████║██╔════╝████╗░██║██║░░░██║
-    # ██╔████╔██║█████╗░░██╔██╗██║██║░░░██║
-    # ██║╚██╔╝██║██╔══╝░░██║╚████║██║░░░██║
-    # ██║░╚═╝░██║███████╗██║░╚███║╚██████╔╝
-    # ╚═╝░░░░░╚═╝╚══════╝╚═╝░░╚══╝░╚═════╝░
+    # Menu
     # #
 
     def createMenu(self):

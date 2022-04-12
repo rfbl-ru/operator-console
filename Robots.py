@@ -1,4 +1,3 @@
-
 from vars import *
 from math import atan, degrees
 from PIL import Image, ImageTk
@@ -12,6 +11,7 @@ pitchTextArray = {}
 pitchMarkerLeftCorner = {}
 robotImage = Image.open("images/robotIcon.png")
 robotMainImage = Image.open("images/robotIconMain.png")
+robotTeammateImage = Image.open("images/robotTeammateIcon.png")
 
 
 def centroid(vertexes):
@@ -34,6 +34,8 @@ class Robots:
         self.oldMarkerIdList = []
         self.pitchCornerIdList = pitchCornerIdList
         self.mainRobotId = -1
+        self.opponents = []
+        self.teammates = []
         self.pitchSize = pitchSize
         self.cameraResolution = cameraResolution
         self.oldMarkerIdList = []
@@ -45,6 +47,9 @@ class Robots:
 
     def setMainRobotId(self, id_):
         self.mainRobotId = id_
+
+    def setTeams(self, t):
+        self.teammates = t
 
     def showAll(self, topic, data, param_1='ball', param_2='aruco'):
         if topic.__contains__(param_1):
@@ -118,6 +123,9 @@ class Robots:
                     robotImage_ = robotImage
                     if marker[0] == int(self.mainRobotId):
                         robotImage_ = robotMainImage
+
+                    if str(marker[0]) in self.teammates:
+                        robotImage_ = robotTeammateImage
 
                     try:
                         robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
