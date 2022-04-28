@@ -13,9 +13,9 @@ from functions import *
 import pyautogui
 import vars
 
-robotsArray = {}
-robotsImageArray = {}
-robotsTextArray = {}
+# robotsArray = {}
+# robotsImageArray = {}
+# robotsTextArray = {}
 
 app = Window(language['titleMainWindow'], width, height)
 
@@ -43,15 +43,15 @@ if __name__ == '__main__':
     camera1Frame = app.createFrame(0, height / 2, width / 2, height / 2, rwidth=0.5)
     camera2Frame = app.createFrame(width / 2, height / 2, width / 2, height / 2, rwidth=0.5)
 
-    sc1 = app.createButton(camera1Frame, lambda: stopCameraStream(camera1Frame, cc1, sc1), text=language['stopCamera'])
-    cc1 = app.createButton(camera1Frame, lambda: chooseCamera(app.getFrame(camera1Frame), cc1, sc1, camera1Frame),
+    sc1 = app.createButton(camera1Frame, lambda: stopCameraStream(0, cc1, sc1), text=language['stopCamera'])
+    cc1 = app.createButton(camera1Frame, lambda: chooseCamera(app.getFrame(camera1Frame), cc1, sc1, 0),
                            text=language['ChooseCamera0'])
     app.placeButton(cc1, 2, 0.5, 0.5, CENTER)
     cc1.winfo_screenwidth()
 
-    sc2 = app.createButton(camera2Frame, lambda: stopCameraStream(camera2Frame, cc2, sc2), text=language['stopCamera'])
+    sc2 = app.createButton(camera2Frame, lambda: stopCameraStream(1, cc2, sc2), text=language['stopCamera'])
     cc2 = app.createButton(camera2Frame, text=language['ChooseCamera1'],
-                           command=lambda: chooseCamera(app.getFrame(camera2Frame), cc2, sc2, camera2Frame))
+                           command=lambda: chooseCamera(app.getFrame(camera2Frame), cc2, sc2, 1))
     app.placeButton(cc2, 2, 0.5, 0.5, CENTER)
 
     mainMenu = app.createMenu()

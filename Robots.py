@@ -2,13 +2,6 @@ from vars import *
 from math import atan, degrees
 from PIL import Image, ImageTk
 
-robotsArray = {}
-robotsImageArray = {}
-robotsTextArray = {}
-
-pitchMarkersArray = {}
-pitchTextArray = {}
-pitchMarkerLeftCorner = {}
 robotImage = Image.open("images/robotIcon.png")
 robotMainImage = Image.open("images/robotIconMain.png")
 robotTeammateImage = Image.open("images/robotTeammateIcon.png")
@@ -43,6 +36,14 @@ class Robots:
         self.markerIdList = []
         self.lines = []
         self.balls = []
+
+        self.robotsArray = {}
+        self.robotsImageArray = {}
+        self.robotsTextArray = {}
+
+        self.pitchMarkersArray = {}
+        self.pitchTextArray = {}
+        self.pitchMarkerLeftCorner = {}
 
     def setCanvas(self, canvas):
         self.canvas = canvas
@@ -117,12 +118,12 @@ class Robots:
             for marker in markersData:
                 if marker[0] in self.pitchCornerIdList:
                     try:
-                        self.canvas.coords(pitchMarkersArray[marker[0] - 1], marker[1][0] - 10, marker[1][1] - 10,
+                        self.canvas.coords(self.pitchMarkersArray[marker[0] - 1], marker[1][0] - 10, marker[1][1] - 10,
                                            marker[1][0] + 10, marker[1][1] + 10)
-                        self.canvas.coords(pitchTextArray[marker[0] - 1], marker[1][0], marker[1][1])
+                        self.canvas.coords(self.pitchTextArray[marker[0] - 1], marker[1][0], marker[1][1])
                     except KeyError:
-                        pitchMarkersArray[marker[0] - 1] = self.canvas.create_rectangle((0, 0, 0, 0))
-                        pitchTextArray[marker[0] - 1] = self.canvas.create_text(0, 0, text=marker[0])
+                        self.pitchMarkersArray[marker[0] - 1] = self.canvas.create_rectangle((0, 0, 0, 0))
+                        self.pitchTextArray[marker[0] - 1] = self.canvas.create_text(0, 0, text=marker[0])
                 else:
                     robotImage_ = robotImage
                     if marker[0] == int(self.mainRobotId):
@@ -132,15 +133,17 @@ class Robots:
                         robotImage_ = robotTeammateImage
 
                     try:
-                        robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
-                        robotsArray[marker[0] - 1] = self.canvas.create_image(marker[2][0], marker[2][1],
-                                                                              image=robotsImageArray[marker[0] - 1])
-                        self.canvas.coords(robotsTextArray[marker[0] - 1], marker[2][0], marker[2][1])
+                        self.robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
+                        self.robotsArray[marker[0] - 1] = self.canvas.create_image(marker[2][0], marker[2][1],
+                                                                                   image=self.robotsImageArray[
+                                                                                       marker[0] - 1])
+                        self.canvas.coords(self.robotsTextArray[marker[0] - 1], marker[2][0], marker[2][1])
                     except KeyError:
-                        robotsArray[marker[0] - 1] = self.canvas.create_image(marker[2][0], marker[2][1],
-                                                                              image=robotsImageArray[marker[0] - 1])
-                        robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
-                        robotsTextArray[marker[0] - 1] = self.canvas.create_text(marker[2][0], marker[2][1],
+                        self.robotsArray[marker[0] - 1] = self.canvas.create_image(marker[2][0], marker[2][1],
+                                                                                   image=self.robotsImageArray[
+                                                                                       marker[0] - 1])
+                        self.robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
+                        self.robotsTextArray[marker[0] - 1] = self.canvas.create_text(marker[2][0], marker[2][1],
                                                                                  text=marker[0])
 
             self.clearOldMarkers(markerIdList)
@@ -158,11 +161,11 @@ class Robots:
 
         for marker in self.oldMarkerIdList:
             if marker in pitchCornerIdList:
-                self.canvas.coords(pitchMarkersArray[marker - 1], 0, 0, 0, 0)
-                self.canvas.coords(pitchTextArray[marker - 1], 0, 0)
+                self.canvas.coords(self.pitchMarkersArray[marker - 1], 0, 0, 0, 0)
+                self.canvas.coords(self.pitchTextArray[marker - 1], 0, 0)
             else:
-                self.canvas.delete(robotsArray[marker - 1], 0, 0)
-                self.canvas.coords(robotsTextArray[marker - 1], 0, 0)
+                self.canvas.delete(self.robotsArray[marker - 1], 0, 0)
+                self.canvas.coords(self.robotsTextArray[marker - 1], 0, 0)
 
     def calculateBall(self, data):
         if data['ball'] != 'None':

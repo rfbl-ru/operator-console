@@ -83,7 +83,7 @@ def reloadCameraData(cameraNum):
 
 
 def stopCameraStream(cameraNum, changeBtn, stopBtn):
-    cameraNum -= 2
+    # cameraNum -= 2
     reloadCameraData(cameraNum)
     stopBtn.place_forget()
     changeBtn.place_forget()
@@ -91,7 +91,7 @@ def stopCameraStream(cameraNum, changeBtn, stopBtn):
 
 
 def onCameraSet(frame, address, root, changeBtn, stopBtn, cameraNum):
-    cameraNum -= 3
+    # cameraNum -= 3
     global popup_init
     popup_init = False
 

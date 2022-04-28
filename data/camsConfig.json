@@ -1,1 +1,1 @@
-[{"x": 72, "y": 169, "address": "3"}, {"x": 23, "y": 200, "address": "4"}]
+[{"x": 72, "y": 169, "address": "3", "type":  "zm"}, {"x": 23, "y": 200, "address": "4", "type" :  "local"}]
