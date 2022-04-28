@@ -7,9 +7,8 @@ import time
 import threading
 import vars
 
-
-
-markerCalculator = Robots()
+markerCalculator_1 = Robots()
+markerCalculator_2 = Robots()
 client = paho.Client()
 
 sendingKey = []
@@ -37,8 +36,8 @@ def openSettingsWindow():
         settings_popup = True
         settingsRoot = settingsWindow.getRoot()
         settingsRoot.attributes("-topmost", True)
-        settingsRoot.bind("<KeyPress>", key_pressed)
-        settingsRoot.protocol("WM_DELETE_WINDOW", lambda: on_settingsClose(settingsRoot))
+        settingsRoot.bind("<KeyPress>", keyPressed)
+        settingsRoot.protocol("WM_DELETE_WINDOW", lambda: onSettingsClose(settingsRoot))
         settingsRoot.resizable(True, False)
 
         settingsData = readSettingsData()
@@ -75,16 +74,9 @@ def openSettingsWindow():
             clearBindsButton = Button(settingsRoot, text=language['clearBinds'], command=clearBinds)
             clearBindsButton.grid(row=6, column=3)
         else:
-            data = {}
-            data['mqtt_host'] = "0.0.0.0"
-            data['mqtt_port'] = "1883"
-            data['mqtt_login'] = "login"
-            data['mqtt_pwd'] = "pwd"
-            data['cmd_name'] = "name"
-            data['robot_name'] = "rname"
-            data['zm_host'] = "0.0.0.0"
-            data['zm_login'] = "login"
-            data['zm_pass'] = "pwd"
+            data = {'mqtt_host': "0.0.0.0", 'mqtt_port': "1883", 'mqtt_login': "login", 'mqtt_pwd': "pwd",
+                    'cmd_name': "name", 'robot_name': "rname", 'zm_host': "0.0.0.0", 'zm_login': "login",
+                    'zm_pass': "pwd"}
             saveSettingsData(data)
 
 
@@ -125,14 +117,14 @@ def readSettingsData():
     return data
 
 
-def on_settingsClose(root):
+def onSettingsClose(root):
     global settings_popup, entries, settings
     settings_popup = False
     root.destroy()
     data = {}
     for entry in entries:
         data[entry] = entries[entry].get()
-    markerCalculator.setMainRobotId(data['robot_name'])
+    markerCalculator_1.setMainRobotId(data['robot_name'])
     settings = data
     saveSettingsData(data)
 
@@ -155,42 +147,59 @@ def reloadMQTTConnection():
         pass
 
 
-def on_message(client, userdata, msg):
-    global markerCalculator
+def onMessage(client, userdata, msg):
+    global markerCalculator_1
     data = json.loads(msg.payload.decode('utf-8'))
     topic = str(msg.topic)
-    if topic == topicInternalData.format(settings['robot_name']):
+    try:
+        if topic == topicInternalData.format(settings['robot_name']):
 
-        with open("data/camsConfig.json", 'w+', encoding='utf-8') as f:
-            json.dump(data['cameras'], f)
+            with open("data/camsConfig.json", 'w+', encoding='utf-8') as f:
+                json.dump(data['cameras'], f)
 
-        with open("data/gameConfiguration.json", 'w+', encoding='utf-8') as f:
-            json.dump(data['commands'], f)
+            with open("data/gameConfiguration.json", 'w+', encoding='utf-8') as f:
+                json.dump(data['commands'], f)
 
-        teammates_ = []
-        for player in data['commands'][settings['cmd_name']]:
-            teammates_.append(player['playerId'])
+            teammates_ = []
+            for player in data['commands'][settings['cmd_name']]:
+                teammates_.append(player['playerId'])
 
-        print(teammates_)
-        markerCalculator.setTeams(teammates_)
-    elif "status" in topic:
-        try:
-            vars.statusVariable.set(language["status"] + ":" + data['status'])
-        except AttributeError:
-            print("Attrib")
-            pass
-        print(data)
-    else:
-        markerCalculator.showAll(topic, data, param_1=topicBall[:len(topicBall) - 1],
-                                 param_2=topicRoot[:len(topicRoot) - 1])
+            markerCalculator_1.setTeams(teammates_)
+        elif "status" in topic:
+            try:
+                vars.statusVariable.set(language["status"] + ":" + data['status'])
+            except AttributeError:
+                print("Attrib")
+                pass
+        elif topic == topicLines:
+            lines_ = []
+            for point in data['lines']:
+                x_ = mapp(point[0], 0, cameraResolution[0], 0, pitchSize[1])
+                y_ = mapp(point[1], 0, cameraResolution[1], 0, pitchSize[0])
+                lines_.append([x_, y_])
+            if int(data['camId']) == 1:
+                markerCalculator_1.drawLines(lines_)
+            elif int(data['camId']) == 2:
+                markerCalculator_2.drawLines(lines_)
+
+        else:
+            if int(data['camId']) == 1:
+                markerCalculator_1.showAll(topic, data, param_1=topicBall[:len(topicBall) - 1],
+                                           param_2=topicRoot[:len(topicRoot) - 1])
+            elif int(data['camId']) == 2:
+                markerCalculator_2.showAll(topic, data, param_1=topicBall[:len(topicBall) - 1],
+                                           param_2=topicRoot[:len(topicRoot) - 1])
+    except TypeError:
+        pass
 
 
-def on_connect(client, userdata, flags, rc):
+def onConnect(client, userdata, flags, rc):
     print("Connected with code %d." % rc)
     client.subscribe(topic=topicBall, qos=1)
     client.subscribe(topic=topicRoot, qos=1)
     client.subscribe(topic=topicInternalData.format(settings['robot_name']), qos=1)
     client.subscribe(topic=topicRobot + settings["robot_name"] + "/status", qos=1)
+    client.subscribe(topic=topicLines, qos=1)
     getConfigFile()
 
 
@@ -198,8 +207,8 @@ def createMQTTConnection():
     global sendThread
     # MQTT CONNECTION
     if settings['mqtt_host'] != "":
-        client.on_connect = on_connect
-        client.on_message = on_message
+        client.on_connect = onConnect
+        client.on_message = onMessage
         client.username_pw_set(settings['mqtt_login'], settings['mqtt_pwd'])
         try:
             client.connect(host=settings['mqtt_host'])
@@ -224,14 +233,12 @@ def send():
                 client.publish(sendTopic, keyboard[str(key)])
 
 
-def key_pressed(event):
+def keyPressed(event):
     global sendingKey, keyboard, isBinding
-    print(event)
 
     if isBinding:
         settings = readKeyboardSettings()
         settings[event.keycode] = bindCommand.get()[:-1]
-        print(settings)
         saveKeyboardSettings(settings)
         with open('data/keyboard.json', 'r+', encoding='utf-8') as f:
             keyboard = json.load(f)
@@ -241,12 +248,11 @@ def key_pressed(event):
         try:
             if not (event.keycode in sendingKey) and str(event.keycode) in keyboard:
                 sendingKey.append(event.keycode)
-
         except KeyError:
             pass
 
 
-def key_released(event):
+def keyReleased(event):
     global sendingKey
     try:
         if event.keycode in sendingKey:

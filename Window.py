@@ -54,11 +54,17 @@ class Window:
 
     def placeButton(self, button, method, x, y, anchor=CENTER):
         if method == 0:
+            Grid.rowconfigure(self.window,x,weight=1)
+            Grid.columnconfigure(self.window,y,weight=1)
             button.grid(row=x, column=y)
         elif method == 1:
             button.place(x=x, y=y)
         elif method == 2:
             button.place(relx=x, rely=y, anchor=anchor)
+        elif method == 3:
+            Grid.rowconfigure(self.window, x, weight=1)
+            Grid.columnconfigure(self.window, y, weight=1)
+            button.grid(row=x, column=y)
 
     # #
     # Label
@@ -73,6 +79,8 @@ class Window:
 
     def placeLabel(self, label, method, x, y):
         if method == 0:
+            Grid.rowconfigure(self.window, x, weight=1)
+            Grid.columnconfigure(self.window, y, weight=1)
             label.grid(row=x, column=y)
         elif method == 1:
             label.place(x=x, y=y)
@@ -87,6 +95,8 @@ class Window:
 
     def placeCanvas(self, canvas, method, x, y, anchor=CENTER):
         if method == 0:
+            Grid.rowconfigure(self.window, x, weight=1)
+            Grid.columnconfigure(self.window, y, weight=1)
             canvas.grid(row=x, column=y)
         elif method == 1:
             canvas.place(x=x, y=y)

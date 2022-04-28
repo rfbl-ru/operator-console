@@ -19,9 +19,9 @@ robotsTextArray = {}
 
 app = Window(language['titleMainWindow'], width, height)
 
-app.getRoot().bind("<KeyPress>", key_pressed)
-app.getRoot().bind("<KeyRelease>", key_released)
-app.getRoot().resizable(False, False)
+app.getRoot().bind("<KeyPress>", keyPressed)
+app.getRoot().bind("<KeyRelease>", keyReleased)
+app.getRoot().resizable(True, True)
 
 if __name__ == '__main__':
     createMQTTConnection()
@@ -38,7 +38,8 @@ if __name__ == '__main__':
     app.placeLabel(statusLabel, 1, 0, 0)
     statusLabel.configure(textvariable=vars.statusVariable)
 
-    pitchFrame = app.createFrame(0, 20, width, height / 2)
+    pitchFrame_1 = app.createFrame(0, 20, width / 2, height / 2)
+    pitchFrame_2 = app.createFrame(width / 2, 20, width, height / 2)
     camera1Frame = app.createFrame(0, height / 2, width / 2, height / 2, rwidth=0.5)
     camera2Frame = app.createFrame(width / 2, height / 2, width / 2, height / 2, rwidth=0.5)
 
@@ -58,19 +59,27 @@ if __name__ == '__main__':
     app.addCommand(mainMenu, language['reloadConnections'], reloadMQTTConnection)
     app.configRoot(mainMenu)
 
-    pitchCanvas = app.createCanvas(pitchFrame)
+    pitchCanvas_1 = app.createCanvas(pitchFrame_1)
+    pitchCanvas_2 = app.createCanvas(pitchFrame_2)
 
-    pitchCanvas.config(width=pitchSize[1], height=pitchSize[0])
+    pitchCanvas_1.config(width=pitchSize[1], height=pitchSize[0])
+    pitchCanvas_2.config(width=pitchSize[1], height=pitchSize[0])
 
-    app.placeCanvas(pitchCanvas, 2, 0.5, 0.5, CENTER)
+    # app.placeCanvas(pitchCanvas, 2, 0.5, 0.5, CENTER)
+    app.placeCanvas(pitchCanvas_1, 1, width / 4, 0, CENTER)
+    app.placeCanvas(pitchCanvas_2, 1, width / 10, 0, CENTER)
 
     pitchImage = ImageTk.PhotoImage(Image.open("images/pitch_2.png").rotate(90, expand=True), Image.ANTIALIAS)
 
-    pitchCanvas.background = pitchImage
-    bg = pitchCanvas.create_image(pitchSize[1] // 2, pitchSize[0] // 2, image=pitchImage, anchor=CENTER)
-    markerCalculator.setMainRobotId(settings['robot_name'])
+    pitchCanvas_1.background = pitchImage
+    pitchCanvas_2.background = pitchImage
+    bg_1 = pitchCanvas_1.create_image(pitchSize[1] // 2, pitchSize[0] // 2, image=pitchImage, anchor=CENTER)
+    bg_2 = pitchCanvas_2.create_image(pitchSize[1] // 2, pitchSize[0] // 2, image=pitchImage, anchor=CENTER)
+    markerCalculator_1.setMainRobotId(settings['robot_name'])
+    markerCalculator_2.setMainRobotId(settings['robot_name'])
 
-    markerCalculator.setCanvas(pitchCanvas)  # Create marker drawer on canvas pitchCanvas
+    markerCalculator_1.setCanvas(pitchCanvas_1)  # Create marker drawer on canvas pitchCanvas
+    markerCalculator_2.setCanvas(pitchCanvas_2)  # Create marker drawer on canvas pitchCanvas
 
     client.loop_start()
     try:

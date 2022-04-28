@@ -18,11 +18,12 @@ topicBall = "MIPT-SportRoboticsClub/LunokhodFootball/RawBALL/#"
 topicRobot = "MIPT-SportRoboticsClub/LunokhodFootball/Robots/"
 topicInternalCommands = "MIPT-SportRoboticsClub/LunokhodFootball/Internal/{0}"
 topicInternalData = "MIPT-SportRoboticsClub/LunokhodFootball/Data/{0}"
+topicLines = "MIPT-SportRoboticsClub/LunokhodFootball/PitchLines"
 
 pitchCornerIdList = [10, 20, 30, 40]
 robotIdList = [1, 2, 3, 4, 5, 6]
 pitchSize = (336, 238)
-cameraResolution = (640, 480)
+cameraResolution = (1280, 720)
 width, height = 1280, 720
 
 statusVariable = None

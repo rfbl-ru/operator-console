@@ -48,8 +48,11 @@ def chooseCamera(frame, changeBtn, stopBtn, cameraNum):
             camConfig_ = json.load(f)
 
         for camera in camConfig_:
-            video_host = zm_pattern.format(settings['zm_host'], camera['address'], random.randint(1000, 100000),
-                                           settings['zm_login'], settings['zm_pass'])
+            if camera["type"] == "zm":
+                video_host = zm_pattern.format(settings['zm_host'], camera['address'], random.randint(1000, 100000),
+                                               settings['zm_login'], settings['zm_pass'])
+            else:
+                video_host = camera['address']
             btn = chooseCameraWindow.createButton(chooseCameraFrame,
                                                   lambda address=video_host: onCameraSet(frame, address,
                                                                                          chooseCameraRoot,
@@ -64,9 +67,17 @@ def chooseCamera(frame, changeBtn, stopBtn, cameraNum):
 
 def reloadCameraData(cameraNum):
     stopEvents[cameraNum].set()
-    videoStreams[cameraNum].stop()
+    try:
+        videoStreams[cameraNum].stop()
+    except AttributeError:
+        print("Camera not connected, check ID")
+        pass
+
+    try:
+        players[cameraNum].place_forget()
+    except AttributeError:
+        pass
     videoStreams[cameraNum] = None
-    players[cameraNum].place_forget()
     players[cameraNum] = None
     playersFrame[cameraNum].place_forget()
 
@@ -80,11 +91,11 @@ def stopCameraStream(cameraNum, changeBtn, stopBtn):
 
 
 def onCameraSet(frame, address, root, changeBtn, stopBtn, cameraNum):
-    cameraNum -= 2
+    cameraNum -= 3
     global popup_init
     popup_init = False
 
-    if videoStreams[cameraNum] is not None:
+    if videoStreams[cameraNum] is not None or playersFrame[cameraNum] is not None:
         reloadCameraData(cameraNum)
     playersFrame[cameraNum] = Frame(frame, width=width / 2, height=(height / 2) - changeBtn.winfo_height(), bg="black")
     playersFrame[cameraNum].place(x=0, y=30)
@@ -121,7 +132,7 @@ def videoLoop(cameraNum, address, stopEvent, stopBtn_, changeBtn_):
             else:
                 players[cameraNum].configure(image=image)
                 players[cameraNum].image = image
-            time.sleep(0.01)
+            time.sleep(0.05)
 
 
     except RuntimeError:

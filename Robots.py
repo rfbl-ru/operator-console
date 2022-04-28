@@ -31,6 +31,7 @@ class Robots:
     markerIdList = []
 
     def __init__(self):
+        self.canvas = None
         self.oldMarkerIdList = []
         self.pitchCornerIdList = pitchCornerIdList
         self.mainRobotId = -1
@@ -40,10 +41,12 @@ class Robots:
         self.cameraResolution = cameraResolution
         self.oldMarkerIdList = []
         self.markerIdList = []
+        self.lines = []
+        self.balls = []
 
     def setCanvas(self, canvas):
         self.canvas = canvas
-        self.ball = self.canvas.create_oval(0, 0, 10, 10, fill='red')
+        # self.ball = self.canvas.create_oval(0, 0, 10, 10, fill='red')
 
     def setMainRobotId(self, id_):
         self.mainRobotId = id_
@@ -53,8 +56,9 @@ class Robots:
 
     def showAll(self, topic, data, param_1='ball', param_2='aruco'):
         if topic.__contains__(param_1):
-            ballX, ballY = self.calculateBall(data)
-            self.drawBall(ballX, ballY)
+            # ballX, ballY = self.calculateBall(data)
+            # self.drawBall(ballX, ballY)
+            self.drawAllBalls(data)
         elif topic.__contains__(param_2):
             count, markerIdList, markersData = self.calculateMarkers(data)
             self.drawMarkers(count, markerIdList, markersData)
@@ -74,12 +78,12 @@ class Robots:
                                          (marker['corners']['3']['x'], marker['corners']['3']['y']),
                                          (marker['corners']['4']['x'], marker['corners']['4']['y'])
                                          ))
-                coordsX = mapp(aruco_center[0], 0, self.cameraResolution[0], 0, self.pitchSize[0])
-                coordsY = mapp(aruco_center[1], 0, self.cameraResolution[1], 0, self.pitchSize[1])
-                leftCornerX = mapp(marker['corners']['1']['x'], 0, self.cameraResolution[0], 0, self.pitchSize[0])
-                leftCornerY = mapp(marker['corners']['1']['y'], 0, self.cameraResolution[1], 0, self.pitchSize[1])
-                rightCornerX = mapp(marker['corners']['2']['x'], 0, self.cameraResolution[0], 0, self.pitchSize[0])
-                rightCornerY = mapp(marker['corners']['2']['y'], 0, self.cameraResolution[1], 0, self.pitchSize[1])
+                coordsX = mapp(aruco_center[0], 0, self.cameraResolution[0], 0, self.pitchSize[1])
+                coordsY = mapp(aruco_center[1], 0, self.cameraResolution[1], 0, self.pitchSize[0])
+                leftCornerX = mapp(marker['corners']['1']['x'], 0, self.cameraResolution[0], 0, self.pitchSize[1])
+                leftCornerY = mapp(marker['corners']['1']['y'], 0, self.cameraResolution[1], 0, self.pitchSize[0])
+                rightCornerX = mapp(marker['corners']['2']['x'], 0, self.cameraResolution[0], 0, self.pitchSize[1])
+                rightCornerY = mapp(marker['corners']['2']['y'], 0, self.cameraResolution[1], 0, self.pitchSize[0])
                 try:
                     angle = degrees(atan((rightCornerY - leftCornerY) / (rightCornerX - leftCornerX)))
                 except ZeroDivisionError:
@@ -162,8 +166,8 @@ class Robots:
 
     def calculateBall(self, data):
         if data['ball'] != 'None':
-            ballX = mapp(data['ball']['center']['x'], 0, cameraResolution[0], 0, pitchSize[0])
-            ballY = mapp(data['ball']['center']['y'], 0, cameraResolution[1], 0, pitchSize[1])
+            ballX = mapp(data['ball']['center']['x'], 0, cameraResolution[0], 0, pitchSize[1])
+            ballY = mapp(data['ball']['center']['y'], 0, cameraResolution[1], 0, pitchSize[0])
         else:
             ballX = 0
             ballY = 0
@@ -175,3 +179,25 @@ class Robots:
             self.canvas.coords(self.ball, ballX - 5, ballY - 5, ballX + 5, ballY + 5)
         else:
             self.canvas.coords(self.ball, 0, 0, 0, 0)
+
+    def drawAllBalls(self, data):
+        if len(self.balls) > 0:
+            for ball in self.balls:
+                self.canvas.delete(ball)
+        if data['ball'] != 'None':
+            for ball in data['ball']:
+                ballX = mapp(ball['center']['x'], 0, cameraResolution[0], 0, pitchSize[1])
+                ballY = mapp(ball['center']['y'], 0, cameraResolution[1], 0, pitchSize[0])
+                # self.ball = self.canvas.create_oval(0, 0, 10, 10, fill='red')
+                ball_ = self.canvas.create_oval(ballX, ballY, ballX + 10, ballY + 10, fill='red')
+                self.balls.append(ball_)
+
+    def drawLines(self, points):
+        if len(self.lines) > 0:
+            for line in self.lines:
+                self.canvas.delete(line)
+
+        for i_ in range(len(points) - 1):
+            line_ = self.canvas.create_line(points[i_][0], points[i_][1], points[i_ + 1][0], points[i_ + 1][1],
+                                            width=3, fill="white")
+            self.lines.append(line_)
