@@ -3,7 +3,7 @@
 Установка бибилиотек происходит при помощи команд:
 1. `sudo apt-get install python3-tk`
 2. `pip3 install paho-mqtt`
-3. `sudo apt-get install python3-pil python3-pil.imagetk`
+3. `pip3 install Pillow`
 4. `pip3 install opencv-contrib-python==4.5.3.56`
 5. `pip3 install imutils`
 
