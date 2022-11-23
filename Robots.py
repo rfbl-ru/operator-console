@@ -24,9 +24,12 @@ class Robots:
     markerIdList = []
 
     def __init__(self):
+        self.ball = None
         self.canvas = None
         self.oldMarkerIdList = []
         self.pitchCornerIdList = pitchCornerIdList
+        self.robotsIdList = robotIdList
+        self.camsData = [None] * cameraCount
         self.mainRobotId = -1
         self.opponents = []
         self.teammates = []
@@ -47,7 +50,7 @@ class Robots:
 
     def setCanvas(self, canvas):
         self.canvas = canvas
-        # self.ball = self.canvas.create_oval(0, 0, 10, 10, fill='red')
+        self.ball = self.canvas.create_oval(0, 0, 10, 10, fill='red')
 
     def setMainRobotId(self, id_):
         self.mainRobotId = id_
@@ -55,14 +58,11 @@ class Robots:
     def setTeams(self, t):
         self.teammates = t
 
-    def showAll(self, topic, data, param_1='ball', param_2='aruco'):
-        if topic.__contains__(param_1):
-            # ballX, ballY = self.calculateBall(data)
-            # self.drawBall(ballX, ballY)
-            self.drawAllBalls(data)
-        elif topic.__contains__(param_2):
+    def updateMarkers(self, topic, data, param_2='aruco'):
+        if topic.__contains__(param_2):
             count, markerIdList, markersData = self.calculateMarkers(data)
-            self.drawMarkers(count, markerIdList, markersData)
+            camId = int(data['camId'])
+            self.drawMarkers(count, markerIdList, markersData, camId)
 
     def calculateMarkers(self, data):
         markersData = []
@@ -93,27 +93,19 @@ class Robots:
                 localCoordinateY1 = leftCornerY - coordsY
                 localCoordinateX2 = rightCornerX - coordsX
                 localCoordinateY2 = rightCornerY - coordsY
-                if (
-                        localCoordinateX1 > 0 and localCoordinateY1 > 0 and localCoordinateX2 > 0 and localCoordinateY2 > 0) or \
-                        (
-                                localCoordinateX1 < 0 and localCoordinateY1 > 0 and localCoordinateX2 < 0 and localCoordinateY2 > 0) or \
-                        (
-                                localCoordinateX1 > 0 and localCoordinateY1 > 0 and localCoordinateX2 < 0 and localCoordinateY2 > 0) or \
-                        (
-                                localCoordinateX1 > 0 and localCoordinateY1 < 0 and localCoordinateX2 > 0 and localCoordinateY2 > 0 and -90 < angle < 0) or \
-                        (
-                                localCoordinateX1 < 0 and localCoordinateY1 > 0 and localCoordinateX2 < 0 and localCoordinateY2 < 0 and 0 < angle < 90):
+                if (localCoordinateX1 < 0 and localCoordinateY1 < 0 and localCoordinateX2 < 0 and localCoordinateY2 > 0 and -45 < angle < 90) or \
+                        (localCoordinateX1 < 0 and localCoordinateY1 > 0 and localCoordinateX2 > 0 and localCoordinateY2 > 0) or \
+                        (localCoordinateX1 > 0 and localCoordinateY1 > 0 and localCoordinateX2 > 0 and localCoordinateY2 < 0 and -90 < angle < 0):
                     angle = angle - 180
-                angle -= 90
+                angle = abs(360 - angle)
                 if marker['marker-id'] not in self.pitchCornerIdList:
                     markerData = [marker['marker-id'], angle, [coordsX, coordsY]]
-
                 else:
                     markerData = [marker['marker-id'], [coordsX, coordsY]]
                 markersData.append(markerData)
         return data['count'], self.markerIdList, markersData
 
-    def drawMarkers(self, count, markerIdList, markersData):
+    def drawMarkers(self, count, markerIdList, markersData, camId):
         if count > 0:
             for marker in markersData:
                 if marker[0] in self.pitchCornerIdList:
@@ -134,38 +126,47 @@ class Robots:
 
                     try:
                         self.robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
-                        self.robotsArray[marker[0] - 1] = self.canvas.create_image(marker[2][0], marker[2][1],
+                        self.robotsArray[marker[0] - 1] = self.canvas.create_image(238 - marker[2][0], marker[2][1],
                                                                                    image=self.robotsImageArray[
                                                                                        marker[0] - 1])
-                        self.canvas.coords(self.robotsTextArray[marker[0] - 1], marker[2][0], marker[2][1])
+                        self.canvas.coords(self.robotsTextArray[marker[0] - 1], 238 - marker[2][0], marker[2][1])
                     except KeyError:
-                        self.robotsArray[marker[0] - 1] = self.canvas.create_image(marker[2][0], marker[2][1],
+                        self.robotsArray[marker[0] - 1] = self.canvas.create_image(238 - marker[2][0], marker[2][1],
                                                                                    image=self.robotsImageArray[
                                                                                        marker[0] - 1])
                         self.robotsImageArray[marker[0] - 1] = ImageTk.PhotoImage(robotImage_.rotate(-marker[1]))
-                        self.robotsTextArray[marker[0] - 1] = self.canvas.create_text(marker[2][0], marker[2][1],
-                                                                                 text=marker[0])
+                        self.robotsTextArray[marker[0] - 1] = self.canvas.create_text(238 - marker[2][0], marker[2][1],
+                                                                                      text=marker[0])
 
-            self.clearOldMarkers(markerIdList)
-            self.oldMarkerIdList.clear()
-            self.oldMarkerIdList = markerIdList.copy()
+            self.clearOldMarkers(markerIdList, camId)
+            if self.camsData[camId - 1] is not None:
+                self.camsData[camId - 1].clear()
+            self.camsData[camId - 1] = markerIdList.copy()
         else:
-            self.clearOldMarkers(markerIdList)
-
-    def clearOldMarkers(self, markerIdList):
-        try:
-            for marker in markerIdList:
-                self.oldMarkerIdList.remove(marker)
-        except ValueError:
+            # self.clearOldMarkers(markerIdList, camId)
             pass
 
-        for marker in self.oldMarkerIdList:
-            if marker in pitchCornerIdList:
-                self.canvas.coords(self.pitchMarkersArray[marker - 1], 0, 0, 0, 0)
-                self.canvas.coords(self.pitchTextArray[marker - 1], 0, 0)
-            else:
-                self.canvas.delete(self.robotsArray[marker - 1], 0, 0)
-                self.canvas.coords(self.robotsTextArray[marker - 1], 0, 0)
+    def clearOldMarkers(self, markerIdList, camId):
+        if self.camsData[camId - 1] is not None:
+            try:
+                for marker in markerIdList:
+                    self.camsData[camId - 1].remove(marker)
+            except ValueError:
+                pass
+            except AttributeError:
+                pass
+            except TypeError:
+                pass
+
+            for marker in self.camsData[camId - 1]:
+                if marker in pitchCornerIdList:
+                    self.canvas.coords(self.pitchMarkersArray[marker - 1], 0, 0, 0, 0)
+                    self.canvas.coords(self.pitchTextArray[marker - 1], 0, 0)
+                else:
+                    self.canvas.delete(self.robotsArray[marker - 1], 0, 0)
+                    self.canvas.coords(self.robotsTextArray[marker - 1], 0, 0)
+        else:
+            print(camId, "None")
 
     def calculateBall(self, data):
         if data['ball'] != 'None':
@@ -189,7 +190,7 @@ class Robots:
                 self.canvas.delete(ball)
         if data['ball'] != 'None':
             for ball in data['ball']:
-                ballX = mapp(ball['center']['x'], 0, cameraResolution[0], 0, pitchSize[1])
+                ballX = mapp(195 - ball['center']['x'], 0, cameraResolution[0], 0, pitchSize[1])
                 ballY = mapp(ball['center']['y'], 0, cameraResolution[1], 0, pitchSize[0])
                 # self.ball = self.canvas.create_oval(0, 0, 10, 10, fill='red')
                 ball_ = self.canvas.create_oval(ballX, ballY, ballX + 10, ballY + 10, fill='red')

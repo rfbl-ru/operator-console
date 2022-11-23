@@ -8,7 +8,6 @@ import threading
 import vars
 
 markerCalculator_1 = Robots()
-markerCalculator_2 = Robots()
 client = paho.Client()
 
 sendingKey = []
@@ -171,24 +170,10 @@ def onMessage(client, userdata, msg):
             except AttributeError:
                 print("Attrib")
                 pass
-        elif topic == topicLines:
-            lines_ = []
-            for point in data['lines']:
-                x_ = mapp(point[0], 0, cameraResolution[0], 0, pitchSize[1])
-                y_ = mapp(point[1], 0, cameraResolution[1], 0, pitchSize[0])
-                lines_.append([x_, y_])
-            if int(data['camId']) == 1:
-                markerCalculator_1.drawLines(lines_)
-            elif int(data['camId']) == 2:
-                markerCalculator_2.drawLines(lines_)
-
+        elif topic == topicBall:
+            markerCalculator_1.drawBall(mapp(195 - data[0], 0, 195, 0, pitchSize[1]), mapp(data[1], 0, 293, 0, pitchSize[0]))
         else:
-            if int(data['camId']) == 1:
-                markerCalculator_1.showAll(topic, data, param_1=topicBall[:len(topicBall) - 1],
-                                           param_2=topicRoot[:len(topicRoot) - 1])
-            elif int(data['camId']) == 2:
-                markerCalculator_2.showAll(topic, data, param_1=topicBall[:len(topicBall) - 1],
-                                           param_2=topicRoot[:len(topicRoot) - 1])
+            markerCalculator_1.updateMarkers(topic, data, topicRoot[:(len(topicRoot)) - 1])
     except TypeError:
         pass
 

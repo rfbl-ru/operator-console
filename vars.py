@@ -14,17 +14,18 @@ with open('data/settings.json', 'r+', encoding='utf-8') as f:
 
 
 topicRoot = "MIPT-SportRoboticsClub/LunokhodFootball/RawARUCO/#"
-topicBall = "MIPT-SportRoboticsClub/LunokhodFootball/RawBALL/#"
+topicBall = "MIPT-SportRoboticsClub/LunokhodFootball/Ball"
 topicRobot = "MIPT-SportRoboticsClub/LunokhodFootball/Robots/"
 topicInternalCommands = "MIPT-SportRoboticsClub/LunokhodFootball/Internal/{0}"
 topicInternalData = "MIPT-SportRoboticsClub/LunokhodFootball/Data/{0}"
 topicLines = "MIPT-SportRoboticsClub/LunokhodFootball/PitchLines"
 
 pitchCornerIdList = [10, 20, 30, 40]
-robotIdList = [1, 2, 3, 4, 5, 6]
+robotIdList = [11, 12, 13, 14, 15, 16]
 pitchSize = (336, 238)
-cameraResolution = (1280, 720)
+cameraResolution = (195, 293)
 width, height = 1280, 720
+cameraCount = 2
 
 statusVariable = None
 
